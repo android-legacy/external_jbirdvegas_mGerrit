@@ -18,42 +18,124 @@ package com.jbirdvegas.mgerrit.cards;
  */
 
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
-import com.jbirdvegas.mgerrit.R;
-import com.jbirdvegas.mgerrit.objects.JSONCommit;
+import com.android.volley.RequestQueue;
 import com.fima.cardsui.objects.Card;
+import com.jbirdvegas.mgerrit.PatchSetViewerActivity;
+import com.jbirdvegas.mgerrit.R;
+import com.jbirdvegas.mgerrit.helpers.GravatarHelper;
+import com.jbirdvegas.mgerrit.listeners.TrackingClickListener;
+import com.jbirdvegas.mgerrit.objects.JSONCommit;
 
 public class PatchSetPropertiesCard extends Card {
     private final JSONCommit mJSONCommit;
+    private final PatchSetViewerActivity mPatchSetViewerActivity;
+    private final RequestQueue mRequestQuery;
+    private TextView mSubject;
+    private TextView mOwner;
+    private TextView mAuthor;
+    private TextView mCommitter;
 
-    public PatchSetPropertiesCard(JSONCommit commit) {
+    public PatchSetPropertiesCard(JSONCommit commit,
+                                  PatchSetViewerActivity activity,
+                                  RequestQueue requestQueue) {
         this.mJSONCommit = commit;
+        this.mPatchSetViewerActivity = activity;
+        this.mRequestQuery = requestQueue;
     }
+
     @Override
     public View getCardContent(Context context) {
         LayoutInflater inflater = (LayoutInflater)
                 context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View rootView = inflater.inflate(R.layout.properties_card, null);
-        ((TextView) rootView.findViewById(R.id.prop_card_subject))
-                .setText(mJSONCommit.getSubject());
-        ((TextView) rootView.findViewById(R.id.prop_card_owner))
-                .setText(mJSONCommit.getOwner());
+        mSubject = (TextView) rootView.findViewById(R.id.prop_card_subject);
+        mOwner = (TextView) rootView.findViewById(R.id.prop_card_owner);
+        mAuthor = (TextView) rootView.findViewById(R.id.prop_card_author);
+        mCommitter = (TextView) rootView.findViewById(R.id.prop_card_committer);
+
+        mSubject.setText(mJSONCommit.getSubject());
+        mOwner.setText(mJSONCommit.getOwnerObject().getName());
+        // attach owner's gravatar
+        GravatarHelper.attachGravatarToTextView(
+                mOwner,
+                mJSONCommit.getOwnerObject().getEmail(),
+                mRequestQuery);
+        mOwner.setOnClickListener(new TrackingClickListener(
+                mPatchSetViewerActivity,
+                mJSONCommit.getOwnerObject()
+        ));
+        mOwner.setTag(mJSONCommit.getOwnerObject());
+        setContextMenu(mOwner);
+        setClicksToActionViews(
+                (ImageView) rootView.findViewById(R.id.properties_card_share_info),
+                (ImageView) rootView.findViewById(R.id.properties_card_view_in_browser));
         try {
-            ((TextView) rootView.findViewById(R.id.prop_card_author))
-                    .setText(mJSONCommit.getAuthor().getName());
-            ((TextView) rootView.findViewById(R.id.prop_card_committer))
-                    .setText(mJSONCommit.getCommitter().getName());
+            // set text will throw NullPointer if
+            // we don't have author/committer objects
+            mAuthor.setText(mJSONCommit.getAuthorObject().getName());
+            mAuthor.setOnClickListener(
+                    new TrackingClickListener(
+                            mPatchSetViewerActivity,
+                            mJSONCommit.getAuthorObject()));
+            mCommitter.setText(mJSONCommit.getCommitterObject().getName());
+            mCommitter.setOnClickListener(
+                    new TrackingClickListener(
+                            mPatchSetViewerActivity,
+                            mJSONCommit.getCommitterObject()));
+            // setup contextmenu click actions
+            mAuthor.setTag(mJSONCommit.getAuthorObject());
+            setContextMenu(mAuthor);
+            mCommitter.setTag(mJSONCommit.getCommitterObject());
+            setContextMenu(mCommitter);
+            // attach gravatars (if objects are not null)
+            GravatarHelper.attachGravatarToTextView(
+                    mAuthor,
+                    mJSONCommit.getAuthorObject().getEmail(),
+                    mRequestQuery);
+            GravatarHelper.attachGravatarToTextView(
+                    mCommitter,
+                    mJSONCommit.getCommitterObject().getEmail(),
+                    mRequestQuery);
         } catch (NullPointerException npe) {
             rootView.findViewById(R.id.prop_card_author)
                     .setVisibility(View.GONE);
             rootView.findViewById(R.id.prop_card_committer)
                     .setVisibility(View.GONE);
         }
-        /*
-        TODO evaluate adding Owner/Author/Committer's email *privacy concerns*
-         */
         return rootView;
+    }
+
+    private void setClicksToActionViews(ImageView share, ImageView browser) {
+        share.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(android.content.Intent.ACTION_SEND);
+                intent.setType("text/plain");
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
+                intent.putExtra(Intent.EXTRA_SUBJECT,
+                        String.format(view.getContext().getString(R.string.commit_shared_from_mgerrit),
+                                mJSONCommit.getChangeId()));
+                intent.putExtra(Intent.EXTRA_TEXT, mJSONCommit.getWebAddress() + " #mGerrit");
+                view.getContext().startActivity(intent);
+            }
+        });
+        browser.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW,
+                        Uri.parse(mJSONCommit.getWebAddress()));
+                view.getContext().startActivity(browserIntent);
+            }
+        });
+    }
+
+    private void setContextMenu(TextView textView) {
+        mPatchSetViewerActivity.registerViewForContextMenu(textView);
     }
 }

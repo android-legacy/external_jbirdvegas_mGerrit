@@ -1,18 +1,22 @@
 package com.fima.cardsui.objects;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import com.jbirdvegas.mgerrit.R;
 import com.fima.cardsui.StackAdapter;
 import com.fima.cardsui.SwipeDismissTouchListener;
 import com.fima.cardsui.SwipeDismissTouchListener.OnDismissCallback;
 import com.fima.cardsui.Utils;
+import com.jbirdvegas.mgerrit.Prefs;
+import com.jbirdvegas.mgerrit.R;
 import com.nineoldandroids.animation.Animator;
 import com.nineoldandroids.animation.Animator.AnimatorListener;
 import com.nineoldandroids.animation.ObjectAnimator;
@@ -24,7 +28,7 @@ public class CardStack extends AbstractCard {
     private static final float _45F = 45f;
     private static final String NINE_OLD_TRANSLATION_Y = "translationY";
     private ArrayList<Card> cards;
-    private String title;
+    private String title, stackTitleColor;
 
     private StackAdapter mAdapter;
     private int mPosition;
@@ -63,6 +67,7 @@ public class CardStack extends AbstractCard {
         final TextView title = (TextView) view.findViewById(R.id.stackTitle);
 
         if (!TextUtils.isEmpty(this.title)) {
+            title.setTextColor(Color.parseColor(stackTitleColor));
             title.setText(this.title);
             title.setVisibility(View.VISIBLE);
         }
@@ -80,7 +85,7 @@ public class CardStack extends AbstractCard {
                     RelativeLayout.LayoutParams.WRAP_CONTENT);
 
             int topPx = 0;
-
+            Animation anim = AnimationUtils.loadAnimation(context, R.anim.cards_incoming_anim);
             if (lastCardPosition == i) {
                 // last card
                 cardView = card.getViewLast(context);
@@ -95,9 +100,13 @@ public class CardStack extends AbstractCard {
                     cardView = card.getView(context);
 
                 }
-
                 cardView.setOnClickListener(getClickListener(this, container, i));
+            }
 
+            // if user wants animations
+            if (Prefs.getAnimationPreference(context)) {
+                // add Google Now style animation
+                cardView.startAnimation(anim);
             }
 
             if (i > 0) {
@@ -109,7 +118,7 @@ public class CardStack extends AbstractCard {
 
             cardView.setLayoutParams(lp);
 
-            if (swipable) {
+            if (card.isSwipable()) {
                 cardView.setOnTouchListener(new SwipeDismissTouchListener(
                         cardView, card, new OnDismissCallback() {
 
@@ -119,7 +128,6 @@ public class CardStack extends AbstractCard {
                         // call onCardSwiped() listener
                         c.OnSwipeCard();
                         cards.remove(c);
-
 
                         mAdapter.setItems(mStack, getPosition());
 
@@ -150,6 +158,10 @@ public class CardStack extends AbstractCard {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public String setColor(String color) {
+        return this.stackTitleColor = color;
     }
 
     private OnClickListener getClickListener(final CardStack cardStack,
@@ -183,7 +195,8 @@ public class CardStack extends AbstractCard {
             }
 
             public void onClickFirstCard(final CardStack cardStack,
-                                         final RelativeLayout frameLayout, final int index, View[] views) {
+                                         final RelativeLayout frameLayout, final int index,
+                                         View[] views) {
                 // run through all the cards
                 for (int i = 0; i < views.length; i++) {
                     ObjectAnimator anim = null;
@@ -337,7 +350,6 @@ public class CardStack extends AbstractCard {
 
                 Card card = cardStack.remove(index);
                 cardStack.add(card);
-
                 mAdapter.setItems(cardStack, cardStack.getPosition());
 
                 // refresh();

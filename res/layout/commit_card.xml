@@ -17,95 +17,84 @@
   ~  limitations under the License.
   -->
 
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent">
-
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
     <TextView
+        android:gravity="center"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/commit_card_project_name"
-        android:layout_centerHorizontal="true"
-        android:layout_alignParentTop="true"
-        />
+        android:id="@+id/commit_card_title"
+        android:paddingLeft="8dip"
+        android:paddingRight="8dip"
+        android:paddingBottom="10dip"
+        android:textAppearance="@style/CardTitle"
+        android:textSize="22sp"
+        android:layout_gravity="center"/>
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/commit_card_commit_owner"
-        android:layout_centerHorizontal="true"
-        android:layout_below="@+id/commit_card_project_name"
-        />
+        android:textAppearance="@style/CardText"
+        android:textStyle="bold"
+        android:layout_gravity="center"
+        android:textSize="16sp"/>
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/commit_card_commit_status"
-        android:layout_centerHorizontal="true"
-        android:layout_below="@+id/commit_card_commit_owner"
-        android:paddingBottom="@dimen/commit_card_padding"/>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/commit_card_title"
-        android:layout_centerHorizontal="true"
-        android:layout_below="@+id/commit_card_commit_status"/>
+        android:id="@+id/commit_card_project_name"
+        android:textAppearance="@style/CardText"
+        android:layout_gravity="center"/>
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/commit_card_last_updated"
-        android:layout_centerHorizontal="true"
-        android:layout_below="@+id/commit_card_title"/>
-
+        android:textAppearance="@style/CardText"
+        android:layout_gravity="center"/>
+    <TextView
+        android:gravity="center_horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/commit_card_commit_status"
+        android:paddingBottom="@dimen/commit_card_padding"
+        android:textAppearance="@style/CardText"
+        android:textStyle="italic"
+        android:layout_gravity="center"/>
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/commit_card_message"
-        android:layout_centerHorizontal="true"
-        android:layout_below="@+id/commit_card_last_updated"
         android:paddingTop="10dp"
-        />
-
+        android:textAppearance="@style/CardText"
+        android:layout_gravity="center"/>
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/commit_card_changed_files"
-        android:layout_alignParentRight="true"
-        android:layout_below="@+id/commit_card_message"
-        />
-
+        android:textAppearance="@style/CardText"
+        android:layout_gravity="center"/>
     <LinearLayout
         android:orientation="horizontal"
         android:layout_height="wrap_content"
         android:layout_width="match_parent"
-        android:layout_below="@+id/commit_card_changed_files"
-        android:weightSum="10"
-        android:layout_centerInParent="true">
-
-        <Button
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:text="@string/view_in_browser"
+        android:paddingBottom="8dip"
+        android:layout_gravity="right"
+        android:gravity="end">
+        <ImageView
+            android:src="@drawable/ic_menu_view"
             android:id="@+id/commit_card_view_in_browser"
-            android:layout_marginTop="20dp"
-            android:layout_weight="5"
-            android:singleLine="true"
-            android:paddingLeft="10dp"
-            android:paddingRight="10dp"
-            android:layout_marginRight="10dp"
-            android:layout_marginLeft="10dp"/>
-
-        <Button
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:text="@string/moar_info"
+            style="@style/ActionViewsStyle"/>
+        <ImageView
+            android:src="@drawable/ic_menu_share"
+            android:id="@+id/commit_card_share_info"
+            style="@style/ActionViewsStyle"/>
+        <ImageView
             android:id="@+id/commit_card_moar_info"
-            android:layout_marginTop="20dp"
-            android:layout_weight="5"
-            android:layout_marginLeft="10dp"
-            android:layout_marginRight="10dp"/>
-        <!--android:textAppearance="@color/card_light_text"-->
+            android:src="@android:drawable/ic_menu_info_details"
+            style="@style/ActionViewsStyle"/>
     </LinearLayout>
-</RelativeLayout>
+</LinearLayout>

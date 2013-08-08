@@ -17,7 +17,10 @@ package com.jbirdvegas.mgerrit.objects;
  *  limitations under the License.
  */
 
-public class Reviewer {
+import android.os.Parcel;
+import android.os.Parcelable;
+
+public class Reviewer implements Parcelable {
     public static final String NO_SCORE = "No score";
     public static final String CODE_REVIEW_PLUS_TWO = "Looks good to me, approved";
     public static final String CODE_REVIEW_PLUS_ONE = "Looks good to me, but someone else must approve";
@@ -26,17 +29,23 @@ public class Reviewer {
     public static final String VERIFIED_PLUS_ONE = "Verified";
     public static final String VERIFIED_MINUS_ONE = "Fails";
 
-    private Reviewer(String val, String _name) {
+    private Reviewer(String val, String _name, String _email) {
         value = val;
         name = _name;
+        email = _email;
     }
 
-    public static Reviewer getReviewerInstance(String val, String name) {
-        return new Reviewer(val, name);
+    public static Reviewer getReviewerInstance(String val, String name, String email) {
+        return new Reviewer(val, name, email);
+    }
+
+    public CommitterObject getCommiterObject() {
+        return CommitterObject.getInstance(name, email);
     }
 
     private String value;
     private String name;
+    private String email;
 
     public String getValue() {
         return value;
@@ -48,11 +57,30 @@ public class Reviewer {
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder();
-        sb.append("Reviewer");
-        sb.append("{value='").append(value).append('\'');
-        sb.append(", name='").append(name).append('\'');
-        sb.append('}');
-        return sb.toString();
+        return "Reviewer{" +
+                "value='" + value + '\'' +
+                ", name='" + name + '\'' +
+                ", email='" + email + '\'' +
+                '}';
+    }
+
+    public Reviewer(Parcel parcel) {
+        value = parcel.readString();
+        name = parcel.readString();
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel parcel, int i) {
+        parcel.writeString(value);
+        parcel.writeString(name);
+    }
+
+    public String getEmail() {
+        return email;
     }
 }

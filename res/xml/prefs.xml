@@ -24,12 +24,25 @@
         android:entryValues="@array/gerrit_webaddresses"
         android:title="@string/choose_gerrit_instance"/>
 
-    <ListPreference
-        android:key="explain_status_key"
-        android:entries="@array/status_entries"
-        android:entryValues="@array/status_entry_values"
-        android:title="@string/explain_status_title"
-        android:summary="@string/explain_status_summary"/>
+    <CheckBoxPreference
+        android:key="animation_key"
+        android:title="@string/google_now_style_animations_title"
+        android:summary="@string/google_now_style_animations_summary"/>
+
+    <PreferenceCategory
+        android:title="@string/locales">
+
+        <ListPreference
+            android:key="server_timezone"
+            android:title="@string/server_timezone_title"
+            android:summary="@string/server_timezone_summary"/>
+
+        <ListPreference
+            android:key="local_timezone"
+            android:title="@string/local_timezone_title"
+            android:summary="@string/local_timezone_summary"/>
+
+    </PreferenceCategory>
 
     <PreferenceCategory
         android:title="@string/open_source_libs">
@@ -43,5 +56,15 @@
             android:key="open_source_lib_nine_old_androids"
             android:title="@string/nine_old_androids"
             android:summary="@string/nine_old_androids_website"/>
+
+        <Preference
+            android:key="open_source_aosp_volley"
+            android:title="@string/aosp_volley_title"
+            android:summary="@string/aosp_volley_website"/>
+
+        <Preference
+            android:key="open_source_apache_commons"
+            android:title="@string/apache_commons_title"
+            android:summary="@string/apache_commons_website"/>
     </PreferenceCategory>
 </PreferenceScreen>

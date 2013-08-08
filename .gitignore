@@ -1,5 +1,13 @@
+idea_out/
+build.properties
 bin/
 gen/
 out/
 *.iml
 .idea/
+.classpath
+.project
+local.properties
+build-log.xml
+build.log
+

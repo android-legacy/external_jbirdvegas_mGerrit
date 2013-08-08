@@ -21,28 +21,41 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.preference.CheckBoxPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 import android.widget.Toast;
+import com.jbirdvegas.mgerrit.objects.CommitterObject;
 
-public class Prefs extends PreferenceActivity implements Preference.OnPreferenceClickListener{
+import java.util.LinkedList;
+import java.util.TimeZone;
+
+public class Prefs extends PreferenceActivity implements Preference.OnPreferenceClickListener {
     private static final CharSequence CARDS_UI_KEY = "open_source_lib_cards_ui";
     private static final CharSequence NINE_OLD_ANDROIDS_KEY = "open_source_lib_nine_old_androids";
+    private static final CharSequence AOSP_VOLLEY = "open_source_aosp_volley";
+    private static final CharSequence APACHE_COMMONS_KEY = "open_source_apache_commons";
     private static final String GERRIT_KEY = "gerrit_instances_key";
-    private static final CharSequence EXPLAIN_STATUS_KEY = "explain_status_key";
+    private static final String ANIMATION_KEY = "animation_key";
+    private static final String SAVED_GERRIT_INSTANCES_KEY = "saved_gerrit_instances";
+    private static final String SERVER_TIMEZONE_KEY = "server_timezone";
+    private static final String LOCAL_TIMEZONE_KEY = "local_timezone";
+    private CheckBoxPreference mAnimation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         addPreferencesFromResource(R.xml.prefs);
         // View CardsUI website
-        Preference cardsUI = findPreference(CARDS_UI_KEY);
-        cardsUI.setOnPreferenceClickListener(this);
+        findPreference(CARDS_UI_KEY).setOnPreferenceClickListener(this);
         // View NineOldAndroids website
-        Preference nineOldAndroids = findPreference(NINE_OLD_ANDROIDS_KEY);
-        nineOldAndroids.setOnPreferenceClickListener(this);
+        findPreference(NINE_OLD_ANDROIDS_KEY).setOnPreferenceClickListener(this);
+        // View AOSP's Volley website
+        findPreference(AOSP_VOLLEY).setOnPreferenceClickListener(this);
+        // View Apache Commons Codec
+        findPreference(APACHE_COMMONS_KEY).setOnPreferenceClickListener(this);
         // select gerrit instance
         ListPreference gerritList = (ListPreference) findPreference(GERRIT_KEY);
         gerritList.setSummary(gerritList.getValue());
@@ -50,34 +63,57 @@ public class Prefs extends PreferenceActivity implements Preference.OnPreference
             @Override
             public boolean onPreferenceChange(Preference preference, Object o) {
                 preference.setSummary((CharSequence) o);
-                StaticWebAddress.setGERRIT_INSTANCE_WEBSITE((String) o);
-                Toast.makeText(getApplicationContext(), "Using Gerrit: " + o, Toast.LENGTH_LONG).show();
+                Toast.makeText(preference.getContext(),
+                        new StringBuilder(0)
+                                .append(getString(R.string.using_gerrit_toast))
+                                .append(' ')
+                                .append(o)
+                                .toString(),
+                        Toast.LENGTH_LONG).show();
                 return true;
             }
         });
-        // explain Review, Merged, Abandoned
-        ListPreference explainStatus = (ListPreference) findPreference(EXPLAIN_STATUS_KEY);
-        explainStatus.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-            @Override
-            public boolean onPreferenceChange(Preference preference, Object o) {
-                Toast.makeText(getApplicationContext(), (CharSequence) o, Toast.LENGTH_LONG).show();
-                return true;
-            }
-        });
+        // Allow disabling of Google Now style animations
+        ((CheckBoxPreference) findPreference(ANIMATION_KEY))
+                .setChecked(getAnimationPreference(getApplicationContext()));
+        ListPreference serverTimeZoneList = (ListPreference) findPreference(SERVER_TIMEZONE_KEY);
+        // Allow changing assumed TimeZone for server
+        serverTimeZoneList.setEntryValues(TimeZone.getAvailableIDs());
+        LinkedList<CharSequence> timeZones = new LinkedList<CharSequence>();
+        for (String tz : TimeZone.getAvailableIDs()) {
+            timeZones.add(TimeZone.getTimeZone(tz).getID());
+        }
+        CharSequence[] zoneEntries = new CharSequence[timeZones.size()];
+        serverTimeZoneList.setEntries(timeZones.toArray(zoneEntries));
+        // the local timezone may be inaccurate as provided by TimeZone.getDefault()
+        // to account for this inconsistency we allow users the change from the device
+        // provided localization to user provided localization
+        ListPreference localTimeZoneList = (ListPreference) findPreference(LOCAL_TIMEZONE_KEY);
+        localTimeZoneList.setEntries(TimeZone.getAvailableIDs());
+        localTimeZoneList.setEntryValues(zoneEntries);
     }
 
     /**
      * Used to get current gerrit instance base url
+     *
      * @param context needed for SharedPreferences
      * @return url of preferred gerrit instance
      */
     public static String getCurrentGerrit(Context context) {
         return PreferenceManager.getDefaultSharedPreferences(context)
-                .getString(GERRIT_KEY, StaticWebAddress.HTTP_GERRIT_SUDOSERVERS_COM);
+                .getString(GERRIT_KEY, StaticWebAddress.HTTP_GERRIT_AOKP_CO);
+    }
+
+    public static void setCurrentGerrit(Context context, String gerritInstanceUrl) {
+        PreferenceManager.getDefaultSharedPreferences(context)
+                .edit()
+                .putString(GERRIT_KEY, gerritInstanceUrl)
+                .commit();
     }
 
     /**
      * handles onClick of open source libraries
+     *
      * @param preference library user selected
      * @return true if handled
      */
@@ -88,6 +124,7 @@ public class Prefs extends PreferenceActivity implements Preference.OnPreference
 
     /**
      * reads Preference#getSummary() to launch url in browser
+     *
      * @param pref selected library preference
      * @return true if launch was successful
      */
@@ -100,5 +137,39 @@ public class Prefs extends PreferenceActivity implements Preference.OnPreference
         launchWebsite.setData(Uri.parse((String) pref.getSummary()));
         startActivity(launchWebsite);
         return true;
+    }
+
+    public static Intent getStalkerIntent(Context activity, CommitterObject committerObject) {
+        return new Intent()
+                .addFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT)
+                .putExtra(CardsActivity.KEY_DEVELOPER, committerObject)
+                .setClass(activity, GerritControllerActivity.class);
+    }
+
+    public static Intent getStalkerIntent(Context activity) {
+        return new Intent()
+                .addFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT)
+                .setClass(activity, GerritControllerActivity.class);
+    }
+
+    /**
+     * Google Now style animation removal
+     * @param context used to access SharedPreferences
+     * @return if true to show animations false disables
+     *         animations
+     */
+    public static boolean getAnimationPreference(Context context) {
+        return PreferenceManager.getDefaultSharedPreferences(context)
+                .getBoolean(ANIMATION_KEY, true);
+    }
+
+    public static TimeZone getServerTimeZone(Context context) {
+        return TimeZone.getTimeZone(PreferenceManager.getDefaultSharedPreferences(context)
+                .getString(SERVER_TIMEZONE_KEY, "PST"));
+    }
+
+    public static TimeZone getLocalTimeZone(Context context) {
+        return TimeZone.getTimeZone(PreferenceManager.getDefaultSharedPreferences(context)
+                .getString(LOCAL_TIMEZONE_KEY, TimeZone.getDefault().getID()));
     }
 }
