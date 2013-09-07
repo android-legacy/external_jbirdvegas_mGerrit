@@ -44,17 +44,13 @@ public class JSONCommit implements Parcelable {
     public static final String KEY_STATUS_MERGED = "merged";
     public static final String KEY_STATUS_ABANDONED = "abandoned";
     public static final String DETAILED_ACCOUNTS_ARG = "&o=DETAILED_ACCOUNTS";
-    // CM uses a dated Gerrit Installation without support for &o=MESSAGES
-    public static final String CURRENT_CM_ARGS = new StringBuilder(0)
+    // used to query commit message
+    public static final String CURRENT_PATCHSET_ARGS = new StringBuilder(0)
             .append("&o=CURRENT_REVISION")
             .append("&o=CURRENT_COMMIT")
             .append("&o=CURRENT_FILES")
             .append("&o=DETAILED_LABELS")
             .append(DETAILED_ACCOUNTS_ARG)
-            .toString();
-    // used to query commit message
-    public static final String CURRENT_PATCHSET_ARGS = new StringBuilder(0)
-            .append(CURRENT_CM_ARGS)
             .append("&o=MESSAGES")
             .toString();
     public static final String KEY_INSERTED = "lines_inserted";
@@ -261,6 +257,9 @@ public class JSONCommit implements Parcelable {
 
                 mPatchSetNumber = getPatchSetNumberInternal(object, mCurrentRevision);
             } catch (JSONException ignored) {
+                /* TODO: No code nested in this try block is outside of its own nested try block
+                 *  therefore, this catch block should never get executed.
+                 */
                 mPatchSetNumber = -1;
                 String unknown = context.getString(R.string.unknown);
                 mAuthorObject = CommitterObject.getInstance(unknown, unknown, null, null);

@@ -24,31 +24,29 @@ import android.os.Bundle;
 import android.preference.CheckBoxPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
-import android.preference.PreferenceActivity;
+import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
-import android.support.v4.app.NavUtils;
-import android.view.MenuItem;
 import android.widget.Toast;
 import com.jbirdvegas.mgerrit.objects.CommitterObject;
 
 import java.util.LinkedList;
 import java.util.TimeZone;
 
-public class Prefs extends PreferenceActivity implements Preference.OnPreferenceClickListener {
+public class Prefs extends PreferenceFragment implements Preference.OnPreferenceClickListener {
     private static final CharSequence CARDS_UI_KEY = "open_source_lib_cards_ui";
     private static final CharSequence NINE_OLD_ANDROIDS_KEY = "open_source_lib_nine_old_androids";
     private static final CharSequence AOSP_VOLLEY = "open_source_aosp_volley";
     private static final CharSequence APACHE_COMMONS_KEY = "open_source_apache_commons";
-    private static final String GERRIT_KEY = "gerrit_instances_key";
+    public static final String GERRIT_KEY = "gerrit_instances_key";
     private static final String ANIMATION_KEY = "animation_key";
     private static final String SAVED_GERRIT_INSTANCES_KEY = "saved_gerrit_instances";
     private static final String SERVER_TIMEZONE_KEY = "server_timezone";
     private static final String LOCAL_TIMEZONE_KEY = "local_timezone";
-    private static final String CURRENT_PROJECT = "current_project";
+    public static final String CURRENT_PROJECT = "current_project";
     private CheckBoxPreference mAnimation;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         addPreferencesFromResource(R.xml.prefs);
         // View CardsUI website
@@ -59,9 +57,6 @@ public class Prefs extends PreferenceActivity implements Preference.OnPreference
         findPreference(AOSP_VOLLEY).setOnPreferenceClickListener(this);
         // View Apache Commons Codec
         findPreference(APACHE_COMMONS_KEY).setOnPreferenceClickListener(this);
-
-        // Action bar Up affordance
-        getActionBar().setDisplayHomeAsUpEnabled(true);
 
         // select gerrit instance
         ListPreference gerritList = (ListPreference) findPreference(GERRIT_KEY);
@@ -82,7 +77,7 @@ public class Prefs extends PreferenceActivity implements Preference.OnPreference
         });
         // Allow disabling of Google Now style animations
         ((CheckBoxPreference) findPreference(ANIMATION_KEY))
-                .setChecked(getAnimationPreference(getApplicationContext()));
+                .setChecked(getAnimationPreference(this.getActivity()));
         ListPreference serverTimeZoneList = (ListPreference) findPreference(SERVER_TIMEZONE_KEY);
         // Allow changing assumed TimeZone for server
         serverTimeZoneList.setEntryValues(TimeZone.getAvailableIDs());
@@ -149,7 +144,7 @@ public class Prefs extends PreferenceActivity implements Preference.OnPreference
     public static Intent getStalkerIntent(Context activity, CommitterObject committerObject) {
         return new Intent()
                 .addFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT)
-                .putExtra(CardsActivity.KEY_DEVELOPER, committerObject)
+                .putExtra(CardsFragment.KEY_DEVELOPER, committerObject)
                 .setClass(activity, GerritControllerActivity.class);
     }
 
@@ -186,16 +181,5 @@ public class Prefs extends PreferenceActivity implements Preference.OnPreference
 
     public static String getCurrentProject(Context context) {
         return PreferenceManager.getDefaultSharedPreferences(context).getString(CURRENT_PROJECT, "");
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            // Respond to the action bar's Up/Home button
-            case android.R.id.home:
-                NavUtils.navigateUpFromSameTask(this);
-                return true;
-        }
-        return super.onOptionsItemSelected(item);
     }
 }

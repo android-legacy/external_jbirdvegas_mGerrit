@@ -33,7 +33,6 @@ import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.List;
 
 @SuppressWarnings("AccessOfSystemProperties")
 public abstract class GerritTask extends AsyncTask<String, String, String> {
@@ -211,7 +210,7 @@ public abstract class GerritTask extends AsyncTask<String, String, String> {
         }
     }
 
-    private void closeUpShop() {
+    public void closeUpShop() {
         if (mProgressDialog != null && mProgressDialog.isShowing()) {
             mProgressDialog.cancel();
             mProgressDialog.dismiss();

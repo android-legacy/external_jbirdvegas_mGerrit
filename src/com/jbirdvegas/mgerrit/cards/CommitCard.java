@@ -26,7 +26,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import com.android.volley.RequestQueue;
 import com.fima.cardsui.objects.Card;
-import com.jbirdvegas.mgerrit.CardsActivity;
+import com.jbirdvegas.mgerrit.CardsFragment;
 import com.jbirdvegas.mgerrit.PatchSetViewerActivity;
 import com.jbirdvegas.mgerrit.Prefs;
 import com.jbirdvegas.mgerrit.R;
@@ -43,7 +43,7 @@ import java.util.List;
 
 public class CommitCard extends Card {
     private static final String TAG = CommitCard.class.getSimpleName();
-    private final CardsActivity mCardsActivity;
+
     private final CommitterObject mCommitterObject;
     private final RequestQueue mRequestQuery;
     private JSONCommit mCommit;
@@ -51,10 +51,9 @@ public class CommitCard extends Card {
     private ChangeLogRange mChangeLogRange;
 
     public CommitCard(JSONCommit commit,
-                      CardsActivity activity,
                       CommitterObject committerObject,
-                      RequestQueue requestQueue) {
-        this.mCardsActivity = activity;
+                      RequestQueue requestQueue,
+                      CardsFragment cardsFragment) {
         this.mCommit = commit;
         this.mCommitterObject = committerObject;
         this.mRequestQuery = requestQueue;
@@ -78,8 +77,8 @@ public class CommitCard extends Card {
             ownerTextView.setText(mCommit.getOwnerObject().getName());
             ownerTextView.setTag(mCommit.getOwnerObject());
             TrackingClickListener trackingClickListener =
-                    new TrackingClickListener(mCardsActivity, mCommit.getOwnerObject());
-            if (mCardsActivity.inProject) {
+                    new TrackingClickListener(context, mCommit.getOwnerObject());
+            if (CardsFragment.inProject) {
                 trackingClickListener.addProjectToStalk(mCommit.getProject());
             }
             ownerTextView.setOnClickListener(trackingClickListener);
@@ -91,7 +90,7 @@ public class CommitCard extends Card {
         mProjectTextView.setText(mCommit.getProject());
         mProjectTextView.setTextSize(18f);
         TrackingClickListener trackingClickListener =
-                new TrackingClickListener(mCardsActivity, mCommit.getProject(), mChangeLogRange);
+                new TrackingClickListener(context, mCommit.getProject(), mChangeLogRange);
         if (mCommitterObject != null) {
             trackingClickListener.addUserToStalk(mCommitterObject);
         }
@@ -126,20 +125,15 @@ public class CommitCard extends Card {
                 // example website
                 // http://gerrit.aokp.co/changes/?q=7615&o=CURRENT_REVISION&o=CURRENT_COMMIT&o=CURRENT_FILES&o=DETAILED_LABELS
 
-                // place a note for CM Viewers
-                if (Prefs.getCurrentGerrit(context).contains("cyanogenmod")) {
-                    intent.putExtra(JSONCommit.KEY_WEBSITE, new StringBuilder(0)
-                            .append(Prefs.getCurrentGerrit(context))
-                            .append(StaticWebAddress.getQuery())
-                            .append(mCommit.getCommitNumber())
-                            .append(JSONCommit.CURRENT_CM_ARGS).toString());
-                } else {
-                    intent.putExtra(JSONCommit.KEY_WEBSITE, new StringBuilder(0)
-                            .append(Prefs.getCurrentGerrit(context))
-                            .append(StaticWebAddress.getQuery())
-                            .append(mCommit.getCommitNumber())
-                            .append(JSONCommit.CURRENT_PATCHSET_ARGS).toString());
-                }
+                StringBuilder builder = new StringBuilder(0)
+                        .append(Prefs.getCurrentGerrit(context))
+                        .append(StaticWebAddress.getQuery())
+                        .append(mCommit.getCommitNumber());
+
+                builder.append(JSONCommit.CURRENT_PATCHSET_ARGS);
+
+                intent.putExtra(JSONCommit.KEY_WEBSITE, builder.toString());
+
                 intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 context.startActivity(intent);
             }
